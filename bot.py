@@ -2,14 +2,15 @@ from itertools import count
 import os
 import random
 import re
-from typing import Match
+
+from dotenv import load_dotenv
 
 import discord
 from discord.channel import TextChannel
 from discord.flags import Intents
 from discord.guild import Guild
 from discord.member import Member
-from dotenv import load_dotenv
+from discord.ext import commands
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,61 +21,72 @@ intents.members = True
 intents.guilds = True
 intents.messages = True
 
-client = discord.Client(intents = intents)
+bot = commands.Bot(command_prefix='')
 
-bot.gameChannel: TextChannel = None
-bot.general: TextChannel = None
+class GlobalInfo:
+    pass
 
-bot.games: list = []
+bot.g = GlobalInfo()
 
-@client.event
+bot.g.gameChannel = None
+bot.g.general = None
+
+bot.g.games = []
+
+@bot.event
 async def on_ready():
-    guild: Guild = discord.utils.get(client.guilds, name=GUILD)
+    guild: Guild = discord.utils.get(bot.guilds, name=GUILD)
 
     for channel in guild.channels:
         if (channel.name == 'random-pick'):
-            bot.gameChannel = channel
+            bot.g.gameChannel = channel
         if (channel.name == 'general'):
-            bot.general = channel
+            bot.g.general = channel
     
-    if gameChannel == None:
-        await general.send('I couldn''t find a channel called "random-pick"')
+    if bot.g.gameChannel == None:
+        await bot.g.general.send('I couldn''t find a channel called "random-pick"')
         
 
 
-@client.event
+@bot.event
 async def on_member_join(member):
     await member.create_dm()
     await member.dm_channel.send(
         f'Hi {member.name}, welcome to my Discord server!'
     )
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
-    print(f'{message.content}')
+    print(f'{message.content}: {"boop" in message.content}')
 
     if 'boop' in message.content:
+        if bot.g.gameChannel != None:
+            if len(bot.g.games) == 0:
+                print(f'here 1')
+                async for message in bot.g.gameChannel.history():
+                    if message.author != bot.user:
+                        print(f'not here')
+                        gameEntries = re.findall('(?:\r\n|^)\s+\d+\s*-\s*(.+)')
+                        for gameEntry in gameEntries:
+                            print(f'{gameEntry}')
+                            bot.g.games.append(gameEntry)
 
-        if gameChannel != None and games.count == 0:
-            async for message in gameChannel.history():
-                if message.author != client.user:
-                    gameEntries = re.findall('(?:\r\n|^)\s+\d+\s*-\s*(.+)')
-                    for gameEntry in gameEntries:
-                        games.append(gameEntry)
-        elif gameChannel == None:
+            if len(bot.g.games) == 0:
+                print(f'here 3')
+                await message.channel.send('I couldn''t find any games')
+            else:
+                print(f'here 4')
+                game = random.choice(bot.g.games)
+                await message.channel.send(f'How about {game}.')
+        elif bot.g.gameChannel == None:
+            print(f'here 2')
             await message.channel.send('I couldn''t find a channel called "random-pick"')
 
-        if games.count == 0:
-            await message.channel.send('I couldn''t find any games')
-        else:
-            game = random.choice(games)
-            await message.channel.send(f'How about {game}.')
 
-
-@client.event
+@bot.event
 async def on_error(event, *args, **kwargs):
     with open('err.log', 'a') as f:
         if event == 'on_message':
@@ -82,4 +94,4 @@ async def on_error(event, *args, **kwargs):
         else:
             raise()
 
-client.run(TOKEN)
+bot.run(TOKEN)
