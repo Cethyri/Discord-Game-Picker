@@ -1,0 +1,126 @@
+{
+    "channels": {},
+    "farewells": [
+        "Oh ok... bye.",
+        "Yup.",
+        "You got it boss.",
+        "Nighty night.",
+        "Goob night.",
+        "Buh bye.",
+        "Bwain tiwed, it's bed time... uwu.",
+        "Sleep tight.",
+        "Goodnight friends.",
+        "No bots were harmed in the making of this bot.",
+        "Shutdown initiated..."
+    ],
+    "gameChannel": "game-channel",
+    "games": [
+        {
+            "name": "Deep Rock Galactic"
+        },
+        {
+            "name": "Don't Starve Together"
+        },
+        {
+            "name": "Dungeon of the Endless"
+        },
+        {
+            "name": "Move or Die"
+        },
+        {
+            "name": "Raft"
+        },
+        {
+            "name": "Risk of Rain 1"
+        },
+        {
+            "name": "Risk of Rain 2"
+        },
+        {
+            "name": "Rocket League"
+        },
+        {
+            "name": "Shellshock live (Tankies)"
+        },
+        {
+            "name": "Super Smash Brothers Ultimate"
+        },
+        {
+            "name": "Ultimate Chicken Horse"
+        },
+        {
+            "name": "Clubhouse 51 Games"
+        },
+        {
+            "name": "Gauntlet\u2122"
+        },
+        {
+            "name": "Hotshot Racing"
+        },
+        {
+            "name": "Minecraft Dungeons"
+        },
+        {
+            "name": "Monster Hunter Rise"
+        },
+        {
+            "name": "Tabletop Playground"
+        },
+        {
+            "name": "Terraria"
+        },
+        {
+            "name": "Screencheat"
+        },
+        {
+            "name": "Splendor"
+        },
+        {
+            "name": "Stardew Valley"
+        },
+        {
+            "name": "UNO"
+        },
+        {
+            "name": "F1 2020"
+        },
+        {
+            "name": "Main Assembly"
+        },
+        {
+            "name": "PopUp Dungeons"
+        },
+        {
+            "name": "Rock of Ages 3"
+        }
+    ],
+    "general": "general",
+    "greetings": [
+        "I'm aliiiive!",
+        "Good day to you.",
+        "Sup b*****s.",
+        "Huh? What! I'M AWAKE!",
+        "Oh it's you guys again...",
+        "Yeah Yeah, the f*** do you want from me?",
+        "I'm powered up and ready to GAME!",
+        "Gamu?",
+        "Le ga-mes.",
+        "Pre-rolling dice...",
+        "Calculating Julian votes in game distribution...",
+        "Deciding what games I want to play...",
+        "Deciding what games you want to play...",
+        "Deleting Indecisiveness...",
+        "Deleting Decisiveness...",
+        "Oops.",
+        "I can see the futuuuuure... games!",
+        "Yo, game time.",
+        "Oh hi Mark."
+    ],
+    "suggestions": [
+        "How about {0}?",
+        "Why not try {0}?",
+        "Hmm... maybe {0}?",
+        "Try {0}.",
+        "Play {0}, I dare you."
+    ]
+}
