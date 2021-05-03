@@ -1,4 +1,5 @@
-#!/usr/bin/env python3 -u
+#!/usr/bin/env python3
+PYTHONUNBUFFERED=1
 
 from enum import Enum
 from itertools import count
