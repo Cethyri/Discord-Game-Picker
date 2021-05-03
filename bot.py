@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from enum import Enum
 from itertools import count
 import json
@@ -77,7 +79,7 @@ else:
 	with open(STARTER, 'r') as save_file:
 		json_info = json.load(save_file)
 
-bot = commands.Bot(command_prefix='')
+bot = commands.Bot(command_prefix='', case_insensitive=True)
 bot = GamePickerBot(bot, GlobalInfo(json_info))
 bot.temp = SimpleNamespace()
 
@@ -162,7 +164,7 @@ async def save(ctx, silent = False):
 	if not silent:
 		await channel.send('information saved!')
 
-@bot.command(name='load-from', help='Load games from a channel using regex.\n\tRegex must be surrounded by quotes and quotes in the regex must be escaped.')
+@bot.command(name='load-from', help='Load games from a channel using regex.\n\tRegex must be surrounded by quotes and quotes in the regex must be escaped.', aliases=['load'])
 async def load_from(ctx, load_channel_name, regex):
 	channel = ctx.channel
 
@@ -188,10 +190,6 @@ async def load_from(ctx, load_channel_name, regex):
 	else:
 		message = 'Here\'s what I found:\n' + '\n'.join(g.name for g in bot.temp.games) + '\n\nkeep or discard?'
 		await channel.send(message)
-
-@bot.command(name='load', help='An alias for load-from.')
-async def load(ctx, load_channel_name, regex):
-	await load_from(ctx, load_channel_name, regex)
 
 @bot.command(name='keep', help='Keep games found by the load-from command.')
 async def keep(ctx):
