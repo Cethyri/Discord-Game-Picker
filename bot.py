@@ -26,8 +26,7 @@ random.seed(datetime.now().microsecond)
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-# SAVE = os.getenv('SAVE_FILE')
-# STARTER = os.getenv('STARTER_FILE')
+
 SAVE='botInfo.json'
 STARTER='starterInfo.json'
 
