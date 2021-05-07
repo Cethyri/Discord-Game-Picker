@@ -51,12 +51,11 @@ class GameInfo(JsonDict):
 	flags:		List[str]	= json_list('flags', str)
 
 class GlobalInfo(JsonDict):
-	gameChannel:	str				= json_basic('gameChannel', str)
-	general:		str				= json_basic('general', str)
 	games:			List[GameInfo]	= json_list('games', GameInfo)
 	suggestions:	List[str]		= json_list('suggestions', str)
 	greetings:		List[str]		= json_list('greetings', str)
 	farewells:		List[str]		= json_list('farewells', str)
+	no_greeting:	List[str]		= json_list('no_greeting', str)
 	pass
 
 class GamePickerBot(commands.Bot):
@@ -80,10 +79,13 @@ else:
 	with open(STARTER, 'r') as save_file:
 		json_info = json.load(save_file)
 
-bot = commands.Bot(command_prefix='', case_insensitive=True)
-bot = GamePickerBot(bot, GlobalInfo(json_info))
+bot: GamePickerBot = GamePickerBot(commands.Bot(command_prefix='', case_insensitive=True), GlobalInfo(json_info))
 bot.temp = SimpleNamespace()
 
+
+def save_info(bot: GamePickerBot):
+	with open(SAVE, 'w') as outfile:
+		json.dump(bot.g, outfile, sort_keys=True, indent=4)
 
 @bot.event
 async def on_ready():
@@ -95,35 +97,32 @@ async def on_ready():
 	bot.ch = SimpleNamespace()
 
 	for channel in guild.channels:
-		if (channel.name == 'game-channel'):
-			bot.ch.gameChannel = channel
-		elif (channel.name == 'general'):
+		if (channel.name == 'general'):
 			bot.ch.general = channel
-	
-	# if bot.ch.gameChannel == None:
-	# 	category = await guild.create_category('BOT CHANNELS')
 
-	# 	overwrites = {
-	# 		guild.default_role: discord.PermissionOverwrite(view_channel=False),
-	# 		guild.me: discord.PermissionOverwrite(view_channel=True),
-	# 		discord.utils.get(guild.roles, name='ADMON'): discord.PermissionOverwrite(view_channel=True),
-	# 		discord.utils.get(guild.roles, name='Capitan'): discord.PermissionOverwrite(view_channel=True)
-	# 	}
-
-	# 	bot.ch.gameChannel = await guild.create_text_channel('secret-game-channel', overwrites=overwrites, category=category)
 	await send_greeting(bot)
 
-async def send_greeting(bot: commands.Bot, channel: TextChannel = None):
+async def send_greeting(bot: GamePickerBot, channel: TextChannel = None):
 	if channel is None:
 		channel = bot.ch.general
+	if channel.name in bot.g.no_greeting:
+		return
+	
 	todaydate = datetime.now().date()
 	today = datetime(todaydate.year, todaydate.month, todaydate.day)
 	start = today.astimezone(tz=timezone.utc)
 	start = start.replace(tzinfo=None)
 	doWakeUp = True
-	async for message in channel.history(after=start):
-		if message.author == bot.user:
-			doWakeUp = False
+	
+	guild: Guild = discord.utils.get(bot.guilds, name=GUILD)
+
+	for otherChannel in guild.channels:
+		async for message in otherChannel.history(after=start):
+			if message.author == bot.user:
+				doWakeUp = False
+				break
+		if not doWakeUp:
+			break
 	if doWakeUp:
 		await channel.send(random.choice(bot.g.greetings))
 
@@ -138,13 +137,14 @@ async def on_message(message):
 
 	await send_greeting(bot, channel)
 
-	if 'hey bot, take a nap' in content or 'no more bot' in content:
-		await channel.send(random.choice(bot.g.farewells))
-		with open(SAVE, 'w') as outfile:
-			json.dump(bot.g, outfile, sort_keys=True, indent=4)
-		await bot.close()
-
 	await bot.process_commands(message)
+
+@bot.command(name='bot sleep', help='Disconnect the bot and save info.', aliases=['hey bot, take a nap', 'no more bot'])
+async def sleep(ctx):
+	await ctx.channel.send(random.choice(bot.g.farewells))
+	save_info(bot)
+	await bot.close()
+
 
 @bot.command(name='boop', help='Pick a random game.')
 async def boop(ctx):
@@ -160,8 +160,7 @@ async def boop(ctx):
 @bot.command(name='save', help='Save game and bot information.')
 async def save(ctx, silent = False):
 	channel = ctx.channel
-	with open(SAVE, 'w') as outfile:
-		json.dump(bot.g, outfile, sort_keys=True, indent=4)
+	save_info(bot)
 	if not silent:
 		await channel.send('information saved!')
 
@@ -196,7 +195,7 @@ async def load_from(ctx, load_channel_name, regex):
 async def keep(ctx):
 	if len(bot.temp.games) > 0:
 		bot.g.games += bot.temp.games
-		await save(ctx, True)
+		save_info(bot)
 		await ctx.channel.send('Games saved!')
 	else:
 		await ctx.channel.send('There are no games dummy.')
@@ -210,17 +209,42 @@ async def discard(ctx):
 		await ctx.channel.send('I can\'t delete nothing...')
 
 @bot.command(name='poof', help='Delete all Game-Picker bot messages in this channel.')
-async def load_from(ctx):
+async def poof(ctx):
 	channel = ctx.channel
 
 	async for message in channel.history():
 		if message.author == bot.user:
 			await message.delete()
 
+@bot.command(name='no greeting', help='Stop the bot from sending greetings in a channel.\nUse here or leave the argument blank to stop greetings in the current channel.', aliases=['no greetings', 'no greet'])
+async def no_greeting(ctx, channelName: str = 'here'):
+	channel = ctx.channel
+
+	name = channel.name if channelName == 'here' else channelName
+	messagePart = 'this channel' if channelName == 'here' else f'channel:{channelName}'
+	if name not in bot.g.no_greeting:
+		bot.g.no_greeting.append(name)
+		await channel.send(f'No more greetings will be sent in {messagePart}')
+	else:
+		await channel.send(f'I already dont send greetings in {messagePart}')
+	
+@bot.command(name='allow greeting', help='Allow the bot to send greetings in a channel.\nUse here or leave the argument blank to allow greetings in the current channel.', aliases=['allow greetings', 'allow greet'])
+async def allow_greeting(ctx, channelName: str = 'here'):
+	channel = ctx.channel
+
+	name = channel.name if channelName == 'here' else channelName
+	messagePart = 'this channel' if channelName == 'here' else f'channel:{channelName}'
+	if name in bot.g.no_greeting:
+		bot.g.no_greeting.remove(name)
+		await channel.send(f'Greetings can be sent in {messagePart}')
+	else:
+		await channel.send(f'I can already send greetings in {messagePart}')
+
+
+
 @bot.event
 async def on_disconnect():
-	with open(SAVE, 'w') as outfile:
-		json.dump(bot.g, outfile, sort_keys=True, indent=4)
+	save_info(bot)
 	print('saved')
 
 # @bot.event
