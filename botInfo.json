@@ -122,5 +122,6 @@
         "Hmm... maybe {0}?",
         "Try {0}.",
         "Play {0}, I dare you."
-    ]
+    ],
+	"no_greeting": []
 }

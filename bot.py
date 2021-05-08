@@ -117,12 +117,13 @@ async def send_greeting(bot: GamePickerBot, channel: TextChannel = None):
 	guild: Guild = discord.utils.get(bot.guilds, name=GUILD)
 
 	for otherChannel in guild.channels:
-		async for message in otherChannel.history(after=start):
-			if message.author == bot.user:
-				doWakeUp = False
+		if isinstance(otherChannel, TextChannel):
+			async for message in otherChannel.history(after=start):
+				if message.author == bot.user:
+					doWakeUp = False
+					break
+			if not doWakeUp:
 				break
-		if not doWakeUp:
-			break
 	if doWakeUp:
 		await channel.send(random.choice(bot.g.greetings))
 
@@ -139,7 +140,7 @@ async def on_message(message):
 
 	await bot.process_commands(message)
 
-@bot.command(name='bot sleep', help='Disconnect the bot and save info.', aliases=['hey bot, take a nap', 'no more bot'])
+@bot.command(name='bot sleep', help='Disconnect the bot and save info.', aliases=['hey bot, take a nap', 'no more bot', 'kill boop', 'go slep pls'])
 async def sleep(ctx):
 	await ctx.channel.send(random.choice(bot.g.farewells))
 	save_info(bot)
