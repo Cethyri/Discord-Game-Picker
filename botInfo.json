@@ -116,12 +116,12 @@
         "Yo, game time.",
         "Oh hi Mark."
     ],
+    "no_greeting": [],
     "suggestions": [
         "How about {0}?",
         "Why not try {0}?",
         "Hmm... maybe {0}?",
         "Try {0}.",
         "Play {0}, I dare you."
-    ],
-	"no_greeting": []
+    ]
 }
