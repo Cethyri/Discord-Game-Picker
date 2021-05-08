@@ -87,6 +87,14 @@ def save_info(bot: GamePickerBot):
 	with open(SAVE, 'w') as outfile:
 		json.dump(bot.g, outfile, sort_keys=True, indent=4)
 
+	print('saved')
+
+def get_start_of_day():
+	todaydate = datetime.now().date()
+	today = datetime(todaydate.year, todaydate.month, todaydate.day)
+	start = today.astimezone(tz=timezone.utc)
+	return start.replace(tzinfo=None)
+
 @bot.event
 async def on_ready():
 	
@@ -108,17 +116,14 @@ async def send_greeting(bot: GamePickerBot, channel: TextChannel = None):
 	if channel.name in bot.g.no_greeting:
 		return
 	
-	todaydate = datetime.now().date()
-	today = datetime(todaydate.year, todaydate.month, todaydate.day)
-	start = today.astimezone(tz=timezone.utc)
-	start = start.replace(tzinfo=None)
+
 	doWakeUp = True
 	
 	guild: Guild = discord.utils.get(bot.guilds, name=GUILD)
 
 	for otherChannel in guild.channels:
 		if isinstance(otherChannel, TextChannel):
-			async for message in otherChannel.history(after=start):
+			async for message in otherChannel.history(after=get_start_of_day()):
 				if message.author == bot.user:
 					doWakeUp = False
 					break
@@ -140,7 +145,7 @@ async def on_message(message):
 
 	await bot.process_commands(message)
 
-@bot.command(name='bot sleep', help='Disconnect the bot and save info.', aliases=['hey bot, take a nap', 'no more bot', 'kill boop', 'go slep pls'])
+@bot.command(name='bot-sleep', help='Disconnect the bot and save info.', aliases=['hey-bot-take-a-nap', 'no-more-bot', 'kill-boop', 'go-slep-pls', 'bot-slep-pls', 'bot-go-sleep'])
 async def sleep(ctx):
 	await ctx.channel.send(random.choice(bot.g.farewells))
 	save_info(bot)
@@ -182,7 +187,8 @@ async def load_from(ctx, load_channel_name, regex):
 			for gameEntry in gameEntries:
 				game = GameInfo()
 				game.name = gameEntry
-				bot.temp.games.append(game)
+				if game.name not in (x.name for x in bot.temp.games):
+					bot.temp.games.append(game)
 
 	bot.temp.games = (g for g in bot.temp.games if g.name not in (game.name for game in bot.g.games))
 	
@@ -191,6 +197,17 @@ async def load_from(ctx, load_channel_name, regex):
 	else:
 		message = 'Here\'s what I found:\n' + '\n'.join(g.name for g in bot.temp.games) + '\n\nkeep or discard?'
 		await channel.send(message)
+
+@bot.command(name='add-game', help='Add a game to the list.', aliases=['add-boop', 'more-boop', 'take-boop'])
+async def add_game(ctx, gameName: str):
+	if gameName not in (x.name for x in bot.g.games):
+		game = GameInfo()
+		game.name = gameName
+		bot.g.games.append(game)
+		save_info(bot)
+		await ctx.channel.send(f'I\'ve added {game.name} to the list of games.')
+
+	await ctx.channel.send(f'{game.name} is already in the list of games.')
 
 @bot.command(name='keep', help='Keep games found by the load-from command.')
 async def keep(ctx):
@@ -213,11 +230,11 @@ async def discard(ctx):
 async def poof(ctx):
 	channel = ctx.channel
 
-	async for message in channel.history():
+	async for message in channel.history(after=get_start_of_day()):
 		if message.author == bot.user:
 			await message.delete()
 
-@bot.command(name='no greeting', help='Stop the bot from sending greetings in a channel.\nUse here or leave the argument blank to stop greetings in the current channel.', aliases=['no greetings', 'no greet'])
+@bot.command(name='no-greeting', help='Stop the bot from sending greetings in a channel.\nUse here or leave the argument blank to stop greetings in the current channel.', aliases=['no-greetings', 'no-greet'])
 async def no_greeting(ctx, channelName: str = 'here'):
 	channel = ctx.channel
 
@@ -225,11 +242,12 @@ async def no_greeting(ctx, channelName: str = 'here'):
 	messagePart = 'this channel' if channelName == 'here' else f'channel:{channelName}'
 	if name not in bot.g.no_greeting:
 		bot.g.no_greeting.append(name)
+		save_info(bot)
 		await channel.send(f'No more greetings will be sent in {messagePart}')
 	else:
 		await channel.send(f'I already dont send greetings in {messagePart}')
 	
-@bot.command(name='allow greeting', help='Allow the bot to send greetings in a channel.\nUse here or leave the argument blank to allow greetings in the current channel.', aliases=['allow greetings', 'allow greet'])
+@bot.command(name='allow-greeting', help='Allow the bot to send greetings in a channel.\nUse here or leave the argument blank to allow greetings in the current channel.', aliases=['allow-greetings', 'allow-greet'])
 async def allow_greeting(ctx, channelName: str = 'here'):
 	channel = ctx.channel
 
@@ -237,24 +255,23 @@ async def allow_greeting(ctx, channelName: str = 'here'):
 	messagePart = 'this channel' if channelName == 'here' else f'channel:{channelName}'
 	if name in bot.g.no_greeting:
 		bot.g.no_greeting.remove(name)
+		save_info(bot)
 		await channel.send(f'Greetings can be sent in {messagePart}')
 	else:
 		await channel.send(f'I can already send greetings in {messagePart}')
 
 
-
 @bot.event
 async def on_disconnect():
 	save_info(bot)
-	print('saved')
 
-# @bot.event
-# async def on_error(event, *args, **kwargs):
-#     print(f'Unhandled message: {kwargs}\n')
-#     # with open('err.log', 'a') as errorLog:
-#     #     if event == 'on_message':
-#     #         errorLog.write(f'Unhandled message: {args[0]}\n')
-#     #     else:
-#     #         raise()
+@bot.event
+async def on_error(event, *args, **kwargs):
+    print(f'Unhandled message: {kwargs}\n')
+    # with open('err.log', 'a') as errorLog:
+    #     if event == 'on_message':
+    #         errorLog.write(f'Unhandled message: {args[0]}\n')
+    #     else:
+    #         raise()
 
 bot.run(TOKEN)
