@@ -190,7 +190,7 @@ async def load_from(ctx, load_channel_name, regex):
 				if game.name not in (x.name for x in bot.temp.games):
 					bot.temp.games.append(game)
 
-	bot.temp.games = (g for g in bot.temp.games if g.name not in (game.name for game in bot.g.games))
+	bot.temp.games = (g for g in bot.temp.games if g.name.upper() not in (game.name.upper() for game in bot.g.games))
 	
 	if len(bot.temp.games) == 0:
 		await channel.send('I couldn\'t find any games')
@@ -200,14 +200,14 @@ async def load_from(ctx, load_channel_name, regex):
 
 @bot.command(name='add-game', help='Add a game to the list.', aliases=['add-boop', 'more-boop', 'take-boop'])
 async def add_game(ctx, gameName: str):
-	if gameName not in (x.name for x in bot.g.games):
+	if gameName.upper() not in (x.name.upper() for x in bot.g.games):
 		game = GameInfo()
 		game.name = gameName
 		bot.g.games.append(game)
 		save_info(bot)
-		await ctx.channel.send(f'I\'ve added {game.name} to the list of games.')
-
-	await ctx.channel.send(f'{game.name} is already in the list of games.')
+		await ctx.channel.send(f'I\'ve added {gameName} to the list of games.')
+	else:
+		await ctx.channel.send(f'{gameName} is already in the list of games.')
 
 @bot.command(name='keep', help='Keep games found by the load-from command.')
 async def keep(ctx):
