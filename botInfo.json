@@ -116,7 +116,9 @@
         "Yo, game time.",
         "Oh hi Mark."
     ],
-    "no_greeting": [],
+    "no_greeting": [
+        "meems"
+    ],
     "suggestions": [
         "How about {0}?",
         "Why not try {0}?",
