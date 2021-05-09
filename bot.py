@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 PYTHONUNBUFFERED=1
 
+from asyncio.windows_events import NULL
 from enum import Enum
 from itertools import count
 import json
@@ -198,17 +199,6 @@ async def load_from(ctx, load_channel_name, regex):
 		message = 'Here\'s what I found:\n' + '\n'.join(g.name for g in bot.temp.games) + '\n\nkeep or discard?'
 		await channel.send(message)
 
-@bot.command(name='add-game', help='Add a game to the list.', aliases=['add-boop', 'more-boop', 'take-boop'])
-async def add_game(ctx, gameName: str):
-	if gameName.upper() not in (x.name.upper() for x in bot.g.games):
-		game = GameInfo()
-		game.name = gameName
-		bot.g.games.append(game)
-		save_info(bot)
-		await ctx.channel.send(f'I\'ve added {gameName} to the list of games.')
-	else:
-		await ctx.channel.send(f'{gameName} is already in the list of games.')
-
 @bot.command(name='keep', help='Keep games found by the load-from command.')
 async def keep(ctx):
 	if len(bot.temp.games) > 0:
@@ -225,6 +215,30 @@ async def discard(ctx):
 		await ctx.channel.send('Games discarded.')
 	else:
 		await ctx.channel.send('I can\'t delete nothing...')
+
+@bot.command(name='add-game', help='Add a game to the list.', aliases=['add-boop', 'more-boop', 'have-boop'])
+async def add_game(ctx, gameName: str):
+	if gameName.upper() not in (x.name.upper() for x in bot.g.games) and len(gameName) > 0:
+		game = GameInfo()
+		game.name = gameName
+		bot.g.games.append(game)
+		save_info(bot)
+		await ctx.channel.send(f'I\'ve added {gameName} to the list of games.')
+	else:
+		await ctx.channel.send(f'{gameName} is already in the list of games.')
+
+@bot.command(name='remove-game', help='Remove a game to the list.', aliases=['remove-boop', 'less-boop', 'yeet-boop'])
+async def add_game(ctx, gameName: str):
+	removeGame = None
+	for game in bot.g.games:
+		if gameName.upper() == game.name.upper():
+			removeGame = game
+	if removeGame is not NULL:
+		bot.g.games.remove(removeGame)
+		save_info(bot)
+		await ctx.channel.send(f'I\'ve removed {gameName} from the list of games.')
+	else:
+		await ctx.channel.send(f'{gameName} isn\'t in the list of games.')
 
 @bot.command(name='poof', help='Delete all Game-Picker bot messages in this channel.')
 async def poof(ctx):
