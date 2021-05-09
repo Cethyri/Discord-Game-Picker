@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 PYTHONUNBUFFERED=1
 
-from asyncio.windows_events import NULL
 from enum import Enum
 from itertools import count
 import json
@@ -233,7 +232,7 @@ async def add_game(ctx, gameName: str):
 	for game in bot.g.games:
 		if gameName.upper() == game.name.upper():
 			removeGame = game
-	if removeGame is not NULL:
+	if removeGame is not None:
 		bot.g.games.remove(removeGame)
 		save_info(bot)
 		await ctx.channel.send(f'I\'ve removed {gameName} from the list of games.')
