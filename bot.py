@@ -226,7 +226,7 @@ async def add_game(ctx, gameName: str):
 	else:
 		await ctx.channel.send(f'{gameName} is already in the list of games.')
 
-@bot.command(name='remove-game', help='Remove a game to the list.', aliases=['remove-boop', 'less-boop', 'yeet-boop'])
+@bot.command(name='remove-game', help='Remove a game from the list.', aliases=['remove-boop', 'less-boop', 'yeet-boop'])
 async def add_game(ctx, gameName: str):
 	removeGame = None
 	for game in bot.g.games:
